@@ -1,0 +1,44 @@
+[gd_scene load_steps=2 format=3 uid="uid://s2wxhayhdgug"]
+
+[ext_resource type="Theme" uid="uid://dlq0it2rivwsa" path="res://theme.tres" id="1_jwa3r"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_jwa3r")
+
+[node name="TabContainer" type="TabContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+current_tab = 0
+
+[node name="Library" type="Control" parent="TabContainer"]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="HSplitContainer" type="HSplitContainer" parent="TabContainer/Library"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Tree" type="Tree" parent="TabContainer/Library/HSplitContainer"]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="TabContainer/Library/HSplitContainer"]
+layout_mode = 2
+
+[node name="Editor" type="Control" parent="TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1

@@ -1,4 +1,4 @@
-BUILDDIR=build
+BUILDDIR=pdfs
 FILENAME=PAPER
 
 pdf:

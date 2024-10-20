@@ -67,7 +67,7 @@ One of the issues though is that the mapping from wavelengths/spectra of light i
 Similarly the ways in which we define our fixed colour primaries within this space (R,G,B,Illuminant) define the axes of any transformations we perform on them (e.g adding 10 to the R channel moves us 10 "steps" along the R axis within that colour space). 
 
 ###### sRGB colour space
-<img src="https://upload.wikimedia.org/wikipedia/commons/9/91/SRGB_chromaticity_CIE1931.svg" alt="sRGB Colour space" width="300" style="background:white"/>
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/SRGB_chromaticity_CIE1931.svg/926px-SRGB_chromaticity_CIE1931.svg.png" alt="sRGB Colour space" width="300" style="background:black"/>
 
 It is non-trivial then to deal with what happens when we have to do mathematics and operations on the values _within_ a colour space. If we double the values of the R channel, how this affects perceived colour will depend on what colour space we're in. This means we have to be very careful about which operations we can perform while inside a colour space to avoid becoming misaligned with what we _think_ we're doing to the colour and what we _are_ doing to the colour.
 

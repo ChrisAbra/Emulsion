@@ -70,15 +70,27 @@ The two variances that cause inconsistency are in the lights and a cameras colou
 
 $$ S = T\intop_{λ}{I(λ)⋅A^F(λ)⋅A^C(λ) },dλ  $$
 
-where $S$ is the amount of energy received by the sensor, $T$ is Time, $I$ is the illuminant energy, $A^F$ the attenuation of the film, $A^C$ is the attenuation of the relevant colour filter in the bayer filter. Computationally however, it is often better to consider a Riemann sum.
+where $S$ is the amount of energy received by the sensor, $T$ is Time, $I$ is the illuminant energy, $A^F$ the attenuation of the film, $A^C$ is the attenuation of the relevant colour filter in the bayer filter. Computationally however, it is better to consider a Riemann sum.
 
 $$ S = T\sum_{λ}{I_λ⋅A^F_λ⋅A^C_λ },Δλ  $$
 
-We can see then that if any of $I_λ,A^F_λ,A^C_λ$ are 0, the whole product will be 0 and can be ignored. If we could ensure that $I_λ$ was always 0 and 1 only once, our sum would only ever have one non-zero term and the sample would be:
+We can see then that if any of $I_λ,A^F_λ,A^C_λ$ are 0, the whole product will be 0 and can be ignored. If we could ensure that $I_λ$ was always 0 and non-zero only once, our sum would only ever have one non-zero term and the sample would be:
 
-$$ S = T⋅1⋅A^F_λ⋅A^C_λ  $$
+$$ S = T⋅ I ⋅A^F_λ⋅A^C_λ  $$
 
 This simplification can be achieved physically with narrow-band light. 
+
+Similarly, we're actually only interested in the relative energy between each sample as we can linearly scale the total energy afterwards as needed. This means if we take a sample of our narrow-band light at a point unimpeded by the film such as a sprocket hole or prior to loading, we get a sample of:
+
+$$ S_{max} = T⋅ I ⋅ A^C_λ  $$
+
+Our relative sample then can be calculated:
+
+$$ {S_{pixel}\over{S_{max}}} = {{T⋅ I ⋅A^F_λ⋅A^C_λ}\over{T⋅ I ⋅A^C_λ}} = A^F_λ $$
+
+We have thus measured the attenuation of the film at our chosen wavelength by dividing a sample by the max the sample could be, unobstructed by film at all. 
+
+
 
 ****
 

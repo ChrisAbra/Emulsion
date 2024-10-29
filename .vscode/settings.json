@@ -2,5 +2,14 @@
     "cSpell.words": [
         "illuminants",
         "Noritsu"
+    ],
+    "emeraldwalk.runonsave": {},
+    "runOnSave.commands": [
+        {
+            "match": "(\\.md)|(\\.bib)$",
+            "command": "cd Docs && make pdf",
+            "runIn": "backend"
+        },
+
     ]
-}
+} 

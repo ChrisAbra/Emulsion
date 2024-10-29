@@ -4,7 +4,6 @@ date: \today
 author: Christopher Abraham
 bibliography: "bibliography.bib"
 colorlinks: true
-mathfont: texgyredejavu-math.otf 
 geometry: margin=3cm
 fontsize: 12pt
 ---
@@ -35,7 +34,7 @@ A spectral power distribution (see Figure \ref{SPD_Examples}) is the distributio
 ![SPD Curve examples ^[@SPD_Example]\label{SPD_Examples}](images/SPD_CurveExamples.png "SPD_Examples")
 
 
-Metamerism, the perceived matching of colours from different spectral power distributions, means we shouldn't work in a pure RGB or XYZ space to properly model how light and dyes interact as what is sensed by our eye or a camera as a combination of RGB stimulus values might transform differently on reflection/transmission and we would have no way of determining the difference.
+Metamerism, the perceived matching of colours from different spectral power distributions, means we shouldn't work in traditional digital colour spaces to properly model how light and dyes interact as what is sensed by our eye or a camera as a combination of RGB stimulus values might transform differently on reflection/transmission and we would have no way of determining the difference.
 
 ### Film as a series of colour filters
 
@@ -45,20 +44,20 @@ Developed colour print film is a stack of 3 colour filter dyes suspended in a ge
 
 The intensity of light though a single point/"pixel", of a specific wavelength on photographic paper is then found through:
 
-$$ S_λ = I_λ⋅A^c_λ ⋅A^m_λ⋅A^y_λ⋅A^b_λ $$
+$$ S_λ = I_λ⋅T^c_λ ⋅T^m_λ⋅T^y_λ⋅T^b_λ $$
 
 where 
 $S$ is a sample of transmittance energy, 
 $I$ is the illuminant energy, 
-$A$ is the attenuation of the light provided by each sequential dye filter (and film base) layer at this wavelength from $0$ to $1$ where $0$ is total attenuation and $1$ is total transmission.
+$T$ is the transmissivity of the light provided by each sequential dye filter (and film base) layer at this wavelength from $0$ to $1$ where $0$ is total attenuation and $1$ is total transmission.
 
-The attenuation ($A_λ$) of a dye layer is proportional to the height of the layer, the density of the dye, and the filtering characteristics of the dye at that wavelength^[This is more accurately expanded by the Beer–Lambert law]. As the incident light which formed our image only affects one of those, the density, the variation between samples is also proportional to density. 
+The transmissivity ($T$) of a dye layer is proportional to the height of the layer, the density of the dye, and the filtering characteristics of the dye at that wavelength^[This is more accurately expanded by the Beer–Lambert law]. As the incident light which formed our image only affects one of those, the density, the variation between samples is also proportional to density. 
 
-To fully measure the exact SPD of light which emerges after transmitting through print film, we would have to measure this attenuation across the range of wavelengths we're interested in ^[usually 380-750nm for human vision]. Unfortunately this is not feasible for hobby or even most professional measuring equipment at the high-resolutions needed for photography.
+To fully measure the exact SPD of light which emerges after transmitting through print film, we would have to measure this transmissivity across the range of wavelengths we're interested in ^[usually 380-750nm for human vision]. Unfortunately this is not feasible for hobby or even most professional measuring equipment at the high-resolutions needed for photography.
 
 ### Why we can't just take a picture of the film?
 
-Digital colour-filter array cameras are very good at capturing real-life images of every-day scenes. They're designed similarly to our eyes in having short, medium and long wavelength sensitive sensors and can be calibrated so that given certain reference illuminants, their RGB values can be reliably mapped to the XYZ colour space and reproduced by digital monitors in a way which looks similar to how we would have seen that image. As a result digital cameras, like us, suffer from metamerism, but unfortunately has *different* metamers than our eyes or photographic paper. The response curves of each are all different and so all need to be taken into account for accurate modelling of the process.
+Digital colour-filter array cameras are very good at capturing real-life images of every-day scenes. They're designed similarly to our eyes in having overlapping short, medium and long wavelength sensitive sensors and can be calibrated so that given certain reference illuminants, their RGB values can be reliably mapped to the XYZ colour space and reproduced by digital monitors in a way which looks similar to how we would have seen that image. As a result digital cameras, like us, suffer from metamerism, but unfortunately has *different* metamers than our eyes or photographic paper. The response curves of each are all different and so all need to be taken into account for accurate modelling of the process.
 
 The reason camera-scanning largely works at present is enforced consistency and published camera profiles. The algorithms are designed to expect a certain kind of light, cameras are designed to translate readings of a certain kind of light to perceptible colour spaces and then we have designed algorithms to work with that output to emulate the look of photographic paper by eye, feel and trial and error. The issue is that "certain kind of light" is often poorly specified. Most LED lights, even ones purporting "High CRI" produce a very different spectral power distributions than traditional light sources and each other^[@OscarsSolidStateLighting]. Given the spectrally-selective nature of the filters in film, this ends up producing different sensor readings^[@LightSourcesForFilmScanning].
 
@@ -68,29 +67,75 @@ There is also the problem of white-balance and colour depth. Different channels 
 
 The two variances that cause inconsistency are in the lights and a cameras colour transformation matrix/calibration of its channels. These issues are compounded by the crossovers in most camera's filter curves^[@RGBLightSource]. The problem is that a particular sensor reading on a camera's R,G,B values in a single image captures a number of factors conflated together:
 
-$$ S = T\intop_{λ}{I(λ)⋅A^F(λ)⋅A^C(λ) },dλ  $$
+$$ S = t\intop_{λ}{I(λ)⋅T^F(λ)⋅T^C(λ) },dλ  $$
 
-where $S$ is the amount of energy received by the sensor, $T$ is Time, $I$ is the illuminant energy, $A^F$ the attenuation of the film, $A^C$ is the attenuation of the relevant colour filter in the bayer filter. Computationally however, it is better to consider a Riemann sum.
+where $S$ is the amount of energy received by the sensor, $t$ is Time, $I$ is the illuminant energy, $T^F$ the transmissivity of the film, $A^C$ is the transmissivity of the relevant colour filter in the bayer filter. Computationally however, it is better to consider a Riemann sum.
 
-$$ S = T\sum_{λ}{I_λ⋅A^F_λ⋅A^C_λ },Δλ  $$
+$$ S = t\sum_{λ}{I_λ⋅T^F_λ⋅T^C_λ },Δλ  $$
 
-We can see then that if any of $I_λ,A^F_λ,A^C_λ$ are 0, the whole product will be 0 and can be ignored. If we could ensure that $I_λ$ was always 0 and non-zero only once, our sum would only ever have one non-zero term and the sample would be:
+We can see then that if any of $I_λ,T^F_λ,T^C_λ$ are 0, the whole product will be 0 and can be ignored. If we could ensure that $I_λ$ was always 0 and non-zero only once, our sum would only ever have one non-zero term and the sample would be:
 
-$$ S = T⋅ I ⋅A^F_λ⋅A^C_λ  $$
+$$ S = t⋅ I ⋅T^F_λ⋅T^C_λ  $$
 
 This simplification can be achieved physically with narrow-band light. 
 
 Similarly, we're actually only interested in the relative energy between each sample as we can linearly scale the total energy afterwards as needed. This means if we take a sample of our narrow-band light at a point unimpeded by the film such as a sprocket hole or prior to loading, we get a sample of:
 
-$$ S_{max} = T⋅ I ⋅ A^C_λ  $$
+$$ S_{max} = t⋅ I ⋅ T^C_λ  $$
 
 Our relative sample then can be calculated:
 
-$$ {S_{pixel}\over{S_{max}}} = {{T⋅ I ⋅A^F_λ⋅A^C_λ}\over{T⋅ I ⋅A^C_λ}} = A^F_λ $$
+$$ {S_{pixel}\over{S_{max}}} = {{t⋅ I ⋅T^F_λ⋅T^C_λ}\over{t⋅ I ⋅T^C_λ}} = T^F_λ $$
+   
+We can thus measure the transmissivity of the film at our chosen wavelength by dividing a sample by the max the sample could be, unobstructed by film at all. This value is determined irrelevant of the cameras specific sensitivities or the wavelength of light. The main physical limitations will be the time $t$ that $S_{max}$ takes to saturate; as cameras sample $S$ in discrete but linear increments^[And we would want the largest range for the most bit-depth to work with], if there is a misalignment of wavelengths between the camera filters and illuminants then $I_λ⋅T^C_λ$ will be near 0 making the sensor readings time take a very long time.
 
-We have thus measured the attenuation of the film at our chosen wavelength by dividing a sample by the max the sample could be, unobstructed by film at all. 
+This transmissivity however, is the transmissivity of the dyes *and* the colour of the film-base. We can remove the compounding effect of the film base by dividing by $S_{base}$ instead of $S_{max}$. This also has the benefit of extending our dynamic range.
 
+We can convert transmissivity into density with the following formula:
 
+$$ D_λ = -log_{10}(T_λ) $$
+
+For spectrally selective filters however this density will depend on the wavelength. The standard for selecting the wavelengths of light which best correspond to density readings of each of the three dyes respectively in colour film is called Status M Densitometry^[@DigitalColorManagement].  
+
+If we select our narrowband lights to align with the Status M specifications (around 440nm, 530nm, and 620nm respectively), we should be able to treat our readings as reasonable accurate measurement of each dyes density. 
+
+We should however, given the spectral dye density curves of a film stock, be able to adjust our density readings even if we don't perfectly align with the Status M specification. 
+
+![Vision3 250D Spectral Dye Density Curves ^[@Vision3Datasheet]\label{Vision3dyedensity}](images/SpectralDyeDensityVision3_250D.png "Vision3dyedensity")
+
+If our density reading doesn't align with a dyes peak normlaised absorptivity, we can divide our density measurement by the reading at our imaged wavelength (provided we avoid cross-talk such that the effect of the other dyes is minimal to none). For example if at selected wavelength, our dye is only 85% as strong compared to the peak:
+
+$$  D_{adjusted} =  D_{measured} ⋅ {1\over{0.85}} $$
+
+Similarly we could determine a Status M equivalent by comparing to the result at the Status M wavelength. If our value is 85% of the peak density, and the Status M reading would have resulted in 90%, we can adjust our value:
+
+$$ D_{Status M} = D_{measured} ⋅ {0.9\over{0.85}} $$ 
+
+Converting our $D_{adjusted}$ back into transmissivity, we can calculate the transmissivity at the the peak or Status M wavelength.
+
+$$ T_M = 10^{-D_{StatusM}} $$
+
+This way we can see that if our measured transmissivity is 50% but we did not fully align with the Status M wavelength, had we aligned, our transmissivity would have been lower as density would be higher. If we happened to measure the peak exactly but Status M wavelengths would not have, our transmissivity would actually be higher.
+
+### Estimating characteristic curves
+
+Many film stocks unfortunately do not provide spectral dye density curves like the Vision3 used above. This presents a problem of determining the offsets. These filter curves however can be modelled^[close to their peaks] as Gaussian function around their peak wavelengths^[See this intractable graphical explanation: https://www.desmos.com/calculator/sootw4bwhf].
+
+This allows us to determine an offset mathematically: 
+
+$$ offset = exp({-({\lambda_{target} - \lambda_{peak})^2}\over{variance^2}}) $$
+
+e.g. if our blue LED is at 470nm but our yellow dye peaks filtering at 450nm with a variance of around 50:
+
+$$ exp({-({470 - 450)^2}\over{50^2}}) \approx 0.87 $$
+
+We can see that if we measured at the peak density locations, our adjusted density would be identical to unadjusted. 
+
+### A standardised measurement of films effect on light
+
+We now have a means to measure the transmissivity at a standard wavelength, regardless of the exact choices of our lights ^[Provided the lights are generally narrow-band and avoid areas of cross-talk on a film's dye absorbance curves] *and* regardless of our camera's specific spectral sensitivity curves. 
+
+From this information we can continue on to determine the effect of this light on photographic paper knowing we have safely removed or limited variance between setups. Similarly any development steps, or transformations should be consistent and repeatable from user to user for any given image.
 
 ****
 
@@ -98,8 +143,13 @@ We have thus measured the attenuation of the film at our chosen wavelength by di
 How does photographic paper respond to light?
 ===
 
+The SPD of light which hits photographic paper in a traditional darkroom (subtractive) is usually a black-body illuminator such as incandescent bulbs, attenuated through spectrally-selective colour balancing filters to account for scene-lighting and artistic choices, and then through the spectrally-selective coloured filters of the film stock.
 
-The SPD of light which hits photographic paper in a traditional darkroom is usually a black-body illuminator such as incandescent bulbs, attenuated through spectrally-selective colour balancing filters to account for scene-lighting and artistic choices, and then through the spectrally-selective coloured filters of the film stock.
+An alternative method is the trichrome (additive) approach, of exposing paper with sequential narrow-band R,G,B light for varying amounts of time to achieve colour balance. This method is most aligned with our measurements earlier - determining a way to model the transmissivity of light at at least three wavelengths through our film.
+
+Photographic paper works similarly to our eyes and cameras in that it is coated in chemicals which selectively respond to light-energy from different parts of the spectrum. For photographic paper however, there is no filter array, the layers are stacked. Light energy transmits through each layer and the overlaps in sensitivity are large^[@FilmPaperDifference]. This is accounted for in the speed of each layer, with the red/cyan layer responding weakly to almost all light, green/magenta a little faster to green and blue light, and blue/yellow the fastest to mostly just blue light.
+
+This gradient is accounted for in most film-stocks' film-base. A built-in filter for RA-4 balancing.
 
 
 ****

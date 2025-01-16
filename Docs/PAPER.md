@@ -8,9 +8,9 @@ geometry: margin=3cm
 fontsize: 12pt
 ---
 
-Representing the outputs of analogue photography in a digital medium requires careful management of light and colour. A number of software exist to produce useable images with scans from consumer colour digital cameras^[At time of writing, *Negative Lab Pro* an Adobe Lightroom plugin and Darktable's *negadoctor* module are the most common and accessible, but almost all rely on a single image from a Colour-Filter Array camera.], but they tend to struggle with variances between image illuminant and camera specific sensitivities. Their approach is to assume the illuminant is the same as the one the camera is calibrated for and mapped via its camera profile. The process then is to try and invert the image along with specifically tuned transfer functions to recreate the look of photographic paper. Some of these software attempt image specific analysis to try and produce automatic colour balance similar to a lab technician's adjustments with older, specialty film-scanners. 
+Representing the outputs of analogue photography in a digital medium requires careful management of light and colour; a number of software exist to produce useable images with scans from consumer colour digital cameras^[At time of writing, *Negative Lab Pro* an Adobe Lightroom plugin and Darktable's *negadoctor* module are the most common and accessible, but almost all rely on a single image from a Colour-Filter Array camera.], but they tend to struggle with variances between image illuminant and camera specific sensitivities. Their approach is to assume the illuminant is the same as the one the camera is calibrated for and mapped via its camera profile. The process then is to try and invert the image along with specifically tuned transfer functions to recreate the look of photographic paper. Some of these software attempt image specific analysis to try and produce automatic colour balance similar to a lab technician's adjustments with older, specialty film-scanners. 
 
-Similarly, many digital effects and image processing systems evolved from emulating darkroom processes^[cf. Dodging, burning, cropping, unsharp masks, etc.], but more often than not these occur *after* the inversion emulation and thus don't provide the same results as they would in a traditional darkroom. We can however more properly (and consistently) emulate the results of negative film printing by starting at first-principles and attempting to remove as many assumptions and variability as we can.
+Similarly, many digital effects and image processing systems evolved from emulating darkroom processes^[cf. Dodging, burning, cropping, unsharp masks, etc.], but more often than not these occur *after* the inversion emulation and thus don't provide the same results as they would in a traditional darkroom. We can however more properly (and consistently) emulate the results of negative film printing by starting at first-principles and attempting to remove as many assumptions and variability as we can, and work spectrally where possible.
 
 While determining an "accurate" digital representation of an image stored on developed print film has myriad factors and is subject to interpretation and artistry, there are a number of real and modellable parts of the process. Ultimately the question consists of three steps:
 
@@ -69,7 +69,7 @@ The two variances that cause inconsistency are in the lights and a cameras colou
 
 $$ S = t\intop_{λ}{I(λ)⋅T^F(λ)⋅T^C(λ) },dλ  $$
 
-where $S$ is the amount of energy received by the sensor, $t$ is Time, $I$ is the illuminant energy, $T^F$ the transmissivity of the film, $A^C$ is the transmissivity of the relevant colour filter in the bayer filter. Computationally however, it is better to consider a Riemann sum.
+where $S$ is the amount of energy received by the sensor pixel, $t$ is Time, $I$ is the illuminant energy, $T^F$ the transmissivity of the film, $T^C$ is the transmissivity of the relevant colour filter in the bayer filter. Computationally however, it is better to consider a Riemann sum.
 
 $$ S = t\sum_{λ}{I_λ⋅T^F_λ⋅T^C_λ },Δλ  $$
 
@@ -89,39 +89,45 @@ $$ {S_{pixel}\over{S_{max}}} = {{t⋅ I ⋅T^F_λ⋅T^C_λ}\over{t⋅ I ⋅T^C_�
    
 We can thus measure the transmissivity of the film at our chosen wavelength by dividing a sample by the max the sample could be, unobstructed by film at all. This value is determined irrelevant of the cameras specific sensitivities or the wavelength of light. The main physical limitations will be the time $t$ that $S_{max}$ takes to saturate; as cameras sample $S$ in discrete but linear increments^[And we would want the largest range for the most bit-depth to work with], if there is a misalignment of wavelengths between the camera filters and illuminants then $I_λ⋅T^C_λ$ will be near 0 making the sensor readings time take a very long time.
 
-This transmissivity however, is the transmissivity of the dyes *and* the colour of the film-base. We can remove the compounding effect of the film base by dividing by $S_{base}$ instead of $S_{max}$. This also has the benefit of extending our dynamic range.
+<!-- This transmissivity however, is the transmissivity of the dyes *and* the colour of the film-base. We can remove the compounding effect of the film base by dividing by $S_{base}$ instead of $S_{max}$. This also has the benefit of extending our dynamic range.
+ -->
 
 We can convert transmissivity into density with the following formula:
-
 $$ D_λ = -log_{10}(T_λ) $$
 
-For spectrally selective filters however this density will depend on the wavelength. The standard for selecting the wavelengths of light which best correspond to density readings of each of the three dyes respectively in colour film is called Status M Densitometry^[@DigitalColorManagement].  
+For spectrally selective filters however this density will depend on the wavelength. If the same film was scanned with two different light sources, one at 450nm, 530nm, and 620nm and the other at 440nm, 530nm, and 620nm for each B,G,R colour channel, and the yellow filter dye was more effective at 440nm, our transmissivity readings would be lower than the scanner which used 450nm for the blue channel, throwing off the relative density readings. We need to adjust our readings as if they'd hit the film-stock's peak filtering curves.
 
-If we select our narrowband lights to align with the Status M specifications (around 440nm, 530nm, and 620nm respectively), we should be able to treat our readings as reasonable accurate measurement of each dyes density. 
 
-We should however, given the spectral dye density curves of a film stock, be able to adjust our density readings even if we don't perfectly align with the Status M specification. 
+<!---
+Two options present, the peaks of the known film-stock or Status M Densitometry^[@DigitalColorManagement].  
+
+Film producers unfortunately rarely publish the spectral of dyes by wavelength^[the Vision3 below is a rarity] therefore if we select our narrowband lights to align with the Status M specifications (around 440nm, 530nm, and 620nm respectively), we should be able to treat our readings as reasonable interoperable measurements of each dyes density. 
+
+--->
 
 ![Vision3 250D Spectral Dye Density Curves ^[@Vision3Datasheet]\label{Vision3dyedensity}](images/SpectralDyeDensityVision3_250D.png "Vision3dyedensity")
 
-If our density reading doesn't align with a dyes peak normlaised absorptivity, we can divide our density measurement by the reading at our imaged wavelength (provided we avoid cross-talk such that the effect of the other dyes is minimal to none). For example if at selected wavelength, our dye is only 85% as strong compared to the peak:
+If our density reading doesn't align with a dyes peak normlaised absorptivity, we can divide our density measurement by the reading at our imaged wavelength (provided we avoid cross-talk such that the effect of the other dyes is minimal to none)^[It should be noted that the uptick on the cyan dye towards the blue end of the spectrum that overlaps with yellow is more pronounced that reality due to the fact the densities are normalised. As you can see from the Midscale Neutral curve, the relative strength of the cyan dye is significantly less than the yellow.]. For example if at selected wavelength, our dye is only 85% as effective compared to the peak:
 
 $$  D_{adjusted} =  D_{measured} ⋅ {1\over{0.85}} $$
 
-Similarly we could determine a Status M equivalent by comparing to the result at the Status M wavelength. If our value is 85% of the peak density, and the Status M reading would have resulted in 90%, we can adjust our value:
-
+<!-- Similarly we could determine a Status M equivalent by comparing to the result at the Status M wavelength. If our value is 85% of the peak density, and the Status M reading would have resulted in 90%, we can adjust our value:
 $$ D_{Status M} = D_{measured} ⋅ {0.9\over{0.85}} $$ 
 
-Converting our $D_{adjusted}$ back into transmissivity, we can calculate the transmissivity at the the peak or Status M wavelength.
+Converting our $D_{adjusted}$ back into transmissivity, we can calculate the transmissivity at the the peak wavelength.
 
-$$ T_M = 10^{-D_{StatusM}} $$
+$$ T_A = 10^{-D_{adjusted}} $$
 
-This way we can see that if our measured transmissivity is 50% but we did not fully align with the Status M wavelength, had we aligned, our transmissivity would have been lower as density would be higher. If we happened to measure the peak exactly but Status M wavelengths would not have, our transmissivity would actually be higher.
+ -->
+
+
+This way we can see that if our measured transmissivity is 50% but we did not fully align with the peak wavelength, had we aligned, our transmissivity would have been lower as density would be higher.
 
 ### Estimating characteristic curves
 
 Many film stocks unfortunately do not provide spectral dye density curves like the Vision3 used above. This presents a problem of determining the offsets. These filter curves however can be modelled^[close to their peaks] as Gaussian function around their peak wavelengths^[See this intractable graphical explanation: https://www.desmos.com/calculator/sootw4bwhf].
 
-This allows us to determine an offset mathematically: 
+This allows us to determine an offset mathematically^[Mahalanobis distance]: 
 
 $$ offset = exp({-({\lambda_{target} - \lambda_{peak})^2}\over{variance^2}}) $$
 
@@ -133,9 +139,9 @@ We can see that if we measured at the peak density locations, our adjusted densi
 
 ### A standardised measurement of films effect on light
 
-We now have a means to measure the transmissivity at a standard wavelength, regardless of the exact choices of our lights ^[Provided the lights are generally narrow-band and avoid areas of cross-talk on a film's dye absorbance curves] *and* regardless of our camera's specific spectral sensitivity curves. 
+We now have a means to measure the relative density of each dye layer, regardless of the exact choices of our lights ^[Provided the lights are generally narrow-band and avoid areas of cross-talk on a film's dye absorbance curves] *and* regardless of our camera's specific spectral sensitivity curves. 
 
-From this information we can continue on to determine the effect of this light on photographic paper knowing we have safely removed or limited variance between setups. Similarly any development steps, or transformations should be consistent and repeatable from user to user for any given image.
+From this information we can continue on to determine the effect of light spectrally-attenuated by these dye layers on photographic paper knowing we have safely removed or limited variance between equipment. Similarly any development steps, or transformations should be consistent and repeatable from user to user for any given image.
 
 ****
 

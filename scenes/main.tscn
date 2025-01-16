@@ -1,6 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://s2wxhayhdgug"]
-
-[ext_resource type="Theme" uid="uid://dlq0it2rivwsa" path="res://theme.tres" id="1_jwa3r"]
+[gd_scene format=3 uid="uid://s2wxhayhdgug"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -9,7 +7,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("1_jwa3r")
 
 [node name="TabContainer" type="TabContainer" parent="."]
 layout_mode = 1
